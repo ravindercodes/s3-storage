@@ -141,15 +141,11 @@ src/
 
 Add `?debug=true` to the URL to enable debug logging in the browser console.
 
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
 - 📖 [S3 Setup Guide](./S3_SETUP_GUIDE.md)
-- 🐛 [Report Issues](https://github.com/your-repo/issues)
-- 💬 [Discussions](https://github.com/your-repo/discussions)
+- 🐛 [Report Issues](https://github.com/ravindercodes/s3-storage/issues)
 
 ---
 

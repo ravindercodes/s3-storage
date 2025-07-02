@@ -232,6 +232,6 @@ If you encounter issues:
 **Need Help?** 
 - AWS Documentation: https://docs.aws.amazon.com/s3/
 - AWS Support: https://aws.amazon.com/support/
-- S3 Drive GitHub Issues: [Your repository URL]
+- S3 Drive GitHub Issues: https://github.com/ravindercodes/s3-storage/issues
 
 **Security Warning**: Never commit your AWS credentials to version control or share them publicly!
