@@ -5,6 +5,54 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>S3 Drive</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1090.0.min.js"></script>
+    <script>
+      (function() {
+        window.global = window;
+        
+        window.process = { 
+          env: { DEBUG: undefined },
+          browser: true,
+          nextTick: function(cb) { setTimeout(cb, 0); }
+        };
+        
+        var exports = {};
+        
+        if (!Object.setPrototypeOf) {
+          Object.setPrototypeOf = function(obj, proto) {
+            obj.__proto__ = proto;
+            return obj;
+          };
+        }
+        
+        window.Buffer = window.Buffer || {
+          isBuffer: function() { return false; }
+        };
+        
+        if (!Object.hasOwnProperty.call(Object.prototype, 'hasOwnProperty')) {
+          Object.defineProperty(Object.prototype, 'hasOwnProperty', {
+            value: function(prop) {
+              return Object.prototype.hasOwnProperty.call(this, prop);
+            },
+            enumerable: false
+          });
+        }
+        
+        if (window.AWS) {
+          console.log('AWS SDK loaded from CDN');
+          console.log('Available AWS services:', Object.keys(window.AWS));
+        } else {
+          console.error('AWS SDK failed to load from CDN');
+          window.AWS = {}; 
+        }
+        
+        window.AWS.config = window.AWS.config || {};
+        window.AWS.config.update = window.AWS.config.update || function(options) {
+          console.log('Early AWS.config.update polyfill called');
+          Object.assign(window.AWS.config, options);
+        };
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

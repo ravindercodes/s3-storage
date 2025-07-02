@@ -57,7 +57,7 @@ function App() {
 
   useEffect(() => {
     if (isConfigured) {
-      loadObjects(currentPath);
+      loadObjects(currentPath).catch(console.error);
     }
   }, [isConfigured, currentPath, loadObjects]);
 
@@ -72,7 +72,7 @@ function App() {
   useEffect(() => {
     const handleRefreshFileList = () => {
       if (isConfigured) {
-        loadObjects(currentPath);
+        loadObjects(currentPath).catch(console.error);
       }
     };
 
@@ -82,12 +82,10 @@ function App() {
 
   const filteredObjects = useMemo(() => {
     return objects.filter((obj) => {
-      // Search filter
       if (searchQuery && !obj.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
       
-      // Extension filter
       if (filterExtension && (!obj.extension || obj.extension !== filterExtension)) {
         return false;
       }
@@ -102,15 +100,23 @@ function App() {
 
   const handleCreateFolder = async () => {
     if (newFolderName.trim()) {
-      await createFolder(newFolderName.trim(), currentPath);
-      setNewFolderName('');
-      setShowCreateFolder(false);
+      try {
+        await createFolder(newFolderName.trim(), currentPath);
+        setNewFolderName('');
+        setShowCreateFolder(false);
+      } catch (error) {
+        console.error('Failed to create folder:', error);
+      }
     }
   };
 
   const handleUploadFiles = async (files: File[]) => {
-    for (const file of files) {
-      await uploadFile(file, currentPath);
+    try {
+      for (const file of files) {
+        await uploadFile(file, currentPath);
+      }
+    } catch (error) {
+      console.error('Failed to upload files:', error);
     }
   };
 

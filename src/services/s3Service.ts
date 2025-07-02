@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk';
+import AWS from '../aws-sdk-wrapper';
 import { S3Config, S3Object } from '../types';
 
 class S3Service {
@@ -6,13 +6,50 @@ class S3Service {
   private config: S3Config | null = null;
 
   configure(config: S3Config) {
-    this.config = config;
-    AWS.config.update({
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-      region: config.region,
-    });
-    this.s3 = new AWS.S3();
+    try {
+      this.config = config;
+      
+      if (typeof (AWS as any).config === 'undefined') {
+        console.warn('AWS.config is undefined in s3Service, creating it');
+        (AWS as any).config = {};
+      }
+      
+      if (typeof (AWS as any).config.update !== 'function') {
+        console.warn('AWS.config.update is not a function in s3Service, creating it');
+        (AWS as any).config.update = function(options: any) {
+          console.log('AWS.config.update local fallback called with:', options);
+          Object.assign((AWS as any).config, options);
+        };
+      }
+      
+      (AWS as any).config.update({
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+        region: config.region,
+      });
+      
+      if (typeof (AWS as any).S3 !== 'function') {
+        console.error('AWS.S3 is not a constructor. Current type:', typeof (AWS as any).S3);
+        throw new Error('AWS SDK not properly loaded. AWS.S3 is not a constructor.');
+      }
+      
+      try {
+        console.log('Creating new S3 instance...');
+        this.s3 = new (AWS as any).S3({
+          apiVersion: '2006-03-01',
+          maxRetries: 3,
+          httpOptions: { timeout: 30000 }
+        });
+        console.log('S3 instance created successfully:', !!this.s3);
+        return true;
+      } catch (err) {
+        console.error('Error creating S3 instance:', err);
+        throw new Error('Failed to create S3 instance: ' + (err as Error).message);
+      }
+    } catch (error) {
+      console.error('Failed to configure AWS S3:', error);
+      throw error;
+    }
   }
 
   isConfigured(): boolean {
@@ -22,7 +59,6 @@ class S3Service {
   private handleS3Error(error: any): never {
     console.error('S3 Error:', error);
     
-    // Check for CORS-related errors
     if (error.code === 'NetworkingError' || error.message?.includes('Network Failure')) {
       throw new Error(
         'CORS Configuration Required: Your S3 bucket needs to be configured to allow cross-origin requests. ' +
@@ -31,22 +67,18 @@ class S3Service {
       );
     }
     
-    // Check for access denied errors
     if (error.code === 'AccessDenied') {
       throw new Error('Access denied. Please check your AWS credentials and bucket permissions.');
     }
     
-    // Check for bucket not found
     if (error.code === 'NoSuchBucket') {
       throw new Error('The specified bucket does not exist. Please verify the bucket name.');
     }
     
-    // Check for invalid credentials
     if (error.code === 'InvalidAccessKeyId' || error.code === 'SignatureDoesNotMatch') {
       throw new Error('Invalid AWS credentials. Please check your Access Key ID and Secret Access Key.');
     }
     
-    // Generic error fallback
     throw new Error(`S3 operation failed: ${error.message || 'Unknown error'}`);
   }
 
@@ -65,7 +97,6 @@ class S3Service {
       const data = await this.s3.listObjectsV2(params).promise();
       const objects: S3Object[] = [];
 
-      // Add folders (CommonPrefixes)
       if (data.CommonPrefixes) {
         data.CommonPrefixes.forEach((commonPrefix) => {
           if (commonPrefix.Prefix) {
@@ -84,7 +115,6 @@ class S3Service {
         });
       }
 
-      // Add files
       if (data.Contents) {
         data.Contents.forEach((object) => {
           if (object.Key && object.Key !== prefix && !object.Key.endsWith('/')) {
@@ -169,14 +199,12 @@ class S3Service {
     }
 
     try {
-      // Copy to new location
       await this.s3.copyObject({
         Bucket: this.config.bucketName,
         CopySource: `${this.config.bucketName}/${oldKey}`,
         Key: newKey,
       }).promise();
 
-      // Delete original
       await this.deleteObject(oldKey);
     } catch (error) {
       this.handleS3Error(error);
