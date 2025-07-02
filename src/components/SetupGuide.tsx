@@ -119,7 +119,7 @@ export function SetupGuide({ isOpen, onClose }: SetupGuideProps) {
               </button>
             </div>
             <pre className="p-3 text-xs text-gray-800 overflow-x-auto">
-              <code>{corsConfig}</code>
+              <code className="break-all sm:break-normal">{corsConfig}</code>
             </pre>
           </div>
 
@@ -162,7 +162,7 @@ export function SetupGuide({ isOpen, onClose }: SetupGuideProps) {
               </button>
             </div>
             <pre className="p-3 text-xs text-gray-800 overflow-x-auto max-h-48 scrollbar-hide">
-              <code>{iamPolicy}</code>
+              <code className="break-all sm:break-normal">{iamPolicy}</code>
             </pre>
           </div>
 
@@ -246,29 +246,76 @@ export function SetupGuide({ isOpen, onClose }: SetupGuideProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full h-full sm:max-w-4xl sm:w-full sm:max-h-[90vh] sm:h-auto overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">S3 Drive Setup Guide</h2>
-              <p className="text-sm text-gray-600 mt-1">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">S3 Drive Setup Guide</h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Complete these steps to connect your AWS S3 bucket
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-white rounded-lg transition-colors"
+              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-white rounded-lg transition-colors ml-2"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
-        <div className="flex h-[calc(90vh-120px)]">
-          {/* Sidebar */}
-          <div className="w-64 bg-gray-50 border-r overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col sm:flex-row h-[calc(100vh-120px)] sm:h-[calc(90vh-120px)]">
+          {/* Mobile Step Navigation */}
+          <div className="sm:hidden bg-gray-50 border-b">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-900">Step {activeStep} of {steps.length}</h3>
+                <div className="flex gap-1">
+                  {steps.map((step) => (
+                    <button
+                      key={step.id}
+                      onClick={() => setActiveStep(step.id)}
+                      className={`w-3 h-3 rounded-full transition-colors ${
+                        step.id === activeStep ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to step ${step.id}: ${step.title}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-blue-600">
+                  {steps.find(step => step.id === activeStep)?.icon}
+                  <span className="text-sm font-medium">
+                    {steps.find(step => step.id === activeStep)?.title}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {activeStep > 1 && (
+                    <button
+                      onClick={() => setActiveStep(activeStep - 1)}
+                      className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    >
+                      ← Prev
+                    </button>
+                  )}
+                  {activeStep < steps.length && (
+                    <button
+                      onClick={() => setActiveStep(activeStep + 1)}
+                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Next →
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Sidebar */}
+          <div className="hidden sm:block w-64 bg-gray-50 border-r overflow-y-auto scrollbar-hide">
             <div className="p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Setup Steps</h3>
               <nav className="space-y-1">
@@ -312,42 +359,76 @@ export function SetupGuide({ isOpen, onClose }: SetupGuideProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {steps.find(step => step.id === activeStep)?.content}
+              
+              {/* Mobile Content Navigation */}
+              <div className="sm:hidden mt-6 pt-4 border-t border-gray-200">
+                <div className="flex gap-3 justify-between">
+                  {activeStep > 1 ? (
+                    <button
+                      onClick={() => setActiveStep(activeStep - 1)}
+                      className="flex-1 px-4 py-3 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                    >
+                      ← Previous Step
+                    </button>
+                  ) : (
+                    <div className="flex-1"></div>
+                  )}
+                  
+                  {activeStep < steps.length ? (
+                    <button
+                      onClick={() => setActiveStep(activeStep + 1)}
+                      className="flex-1 px-4 py-3 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Next Step →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onClose}
+                      className="flex-1 px-4 py-3 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      🎉 Complete Setup
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Shield className="w-4 h-4" />
-            <span>Your credentials are stored locally and never sent to third parties</span>
-          </div>
-          <div className="flex gap-2">
-            {activeStep > 1 && (
-              <button
-                onClick={() => setActiveStep(activeStep - 1)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Previous
-              </button>
-            )}
-            {activeStep < steps.length ? (
-              <button
-                onClick={() => setActiveStep(activeStep + 1)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Next Step
-              </button>
-            ) : (
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Get Started
-              </button>
-            )}
+        <div className="p-3 sm:p-4 border-t bg-gray-50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="leading-tight">Your credentials are stored locally and never sent to third parties</span>
+            </div>
+            <div className="flex gap-2 justify-between sm:justify-end">
+              {activeStep > 1 && (
+                <button
+                  onClick={() => setActiveStep(activeStep - 1)}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Previous
+                </button>
+              )}
+              {activeStep < steps.length ? (
+                <button
+                  onClick={() => setActiveStep(activeStep + 1)}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Next Step
+                </button>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Get Started
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
